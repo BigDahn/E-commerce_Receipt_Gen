@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
+const xss = require("xss-clean");
+const cookieParser = require("cookie-parser");
 const mongoSanitize = require("@exortek/express-mongo-sanitize");
 const userRouter = require("./routes/userRouter");
 const businessRouter = require("./routes/businessRouter");
@@ -13,14 +15,20 @@ const ErrorClass = require("./utils/ErrorClass");
 
 const app = express();
 
+app.enable("trust proxy");
+
 if (process.env.NODE_ENV === "Development") {
   app.use(morgan("dev"));
 }
 
 app.use(cors());
 app.use(helmet());
+app.use(xss());
 app.use(mongoSanitize());
+
 app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
+app.use(cookieParser());
 
 const limiter = rateLimiter({
   max: 100,
